@@ -11,7 +11,7 @@ if [[ ! $(which ghost) ]]; then
     adduser gsetup --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
     mkdir -p /opt/ghost
     chown gsetup:gsetup /opt/ghost
-    theghost=$(which ghost) && runuser -l myuser -c "cd /opt/ghost && $theghost install -D --no-prompt"
+    theghost=$(which ghost) && runuser -l gsetup -c "cd /opt/ghost && $theghost install -D --no-prompt"
 fi
 
 # Copy over our Quick Install App
