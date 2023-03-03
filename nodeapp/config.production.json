@@ -1,0 +1,29 @@
+{
+    "url": "%ghost_url%",
+    "server": {
+      "port": "%ghost_port%",
+      "host": "127.0.0.1"
+    },
+    "database": {
+      "client": "mysql",
+      "connection": {
+        "host": "127.0.0.1",
+        "user": "%database_user%",
+        "password": "%database_password%",
+        "database": "%database_name%",
+      }
+    },
+    "mail": {
+      "transport": "Direct"
+    },
+    "logging": {
+      "transports": [
+        "file",
+        "stdout"
+      ]
+    },
+    "process": "local",
+    "paths": {
+      "contentPath": "%ghost_content_path%"
+    }
+  }
