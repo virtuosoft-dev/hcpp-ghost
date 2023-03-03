@@ -114,7 +114,7 @@ if ( ! class_exists( 'Ghost') ) {
                 // Display missing nodeapp requirement
                 $content = '<style>.form-group{display:none;}</style>' . $content;
                 $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Cannot contiue. The NodeBB Quick Installer requires the NodeApp plugin.</span>';
+                $msg .= 'Cannot contiue. The Ghost Quick Installer requires the NodeApp plugin.</span>';
                 $msg .= '<script>$(function(){$(".l-unit-toolbar__buttonstrip.float-right a").css("display", "none");});</script>';
             }else{
         
