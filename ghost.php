@@ -17,7 +17,18 @@ if ( ! class_exists( 'Ghost') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->ghost = $this;
+            $hcpp->add_action( 'invoke_plugin', [ $this, 'setup' ] );
         }
+
+        // Setup Ghost with the given user options
+        public function setup( $args ) {
+            if ( $args[0] != 'nodebb_install' ) return $args;
+            global $hcpp;
+            $options = json_decode( $args[1], true );
+            $user = $options['user'];
+            $domain = $options['domain'];
+        }
+
     }
     new Ghost();
 }

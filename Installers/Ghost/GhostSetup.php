@@ -21,7 +21,7 @@ class GhostSetup extends BaseSetup {
             "ghost_email" => ["value" => ""],
 			"ghost_folder" => ["type" => "text", "value" => "", "placeholder" => "/", "label" => "Install Directory"],
 		],
-		"database" => false,
+		"database" => true,
 		"resources" => [
 		],
 		"server" => [
