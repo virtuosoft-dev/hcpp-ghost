@@ -48,8 +48,43 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/current ./"';
             shell_exec( $cmd );
 
-            // Copy over nodebb config files
+            // Copy over ghost config files
             $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
+
+            // Cleanup, allocate ports, prepare nginx and prepare to start services
+            $hcpp->nodeapp->shutdown_apps( $nodeapp_folder );
+            $hcpp->nodeapp->allocate_ports( $nodeapp_folder );
+            $port = file_get_contents( "/usr/local/hestia/data/hcpp/ports/$user/$domain.ports" );
+            $port = $hcpp->delLeftMost( $port, '$ghost_port ' );
+            $port = $hcpp->getLeftMost( $port, ';' );
+
+            // Fill out config.development.json and config.production.json
+            $config = file_get_contents( $ghost_folder . '/config.development.json' );
+            $config = str_replace( '%database_name%', $user . '_' . $options['database_name'], $config );
+            $config = str_replace( '%database_user%', $user . '_' . $options['database_user'], $config );
+            $config = str_replace( '%database_password%', $options['database_password'], $config );
+            $config = str_replace( '%ghost_port%', $port, $config );
+            $url = "http://$domain" . $subfolder;
+            if ( is_dir( "/home/$user/conf/web/$domain/ssl") ) {
+                $url = "https://$domain" . $subfolder;
+            }
+            $config = str_replace( '%ghost_url%', $url, $config );
+            $config = str_replace( '%ghost_content%', $url, $ghost_folder . '/content' );
+
+            file_put_contents( $ghost_folder . '/config.development.json', $config );
+            file_put_contents( $ghost_folder . '/config.production.json', $config );
+
+            // Update proxy and restart nginx
+            if ( $nodeapp_folder . '/' == $ghost_folder ) {
+                $hcpp->run( "change-web-domain-proxy-tpl $user $domain NodeApp" );
+            }else{
+                $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
+                $hcpp->nodeapp->startup_apps( $nodeapp_folder );
+                $hcpp->run( "restart-proxy" );
+            }
+
+            // Await startup of Ghost and POST credentials to complete setup
+            $post_url = $url . '/ghost/#/setup';
 
             // Setup ghost if creds given
             // http://test3.openmy.info/ghost/#/setup
