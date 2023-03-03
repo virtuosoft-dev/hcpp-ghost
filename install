@@ -1,0 +1,22 @@
+#!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
+
+############################################
+# Install Ghost
+############################################
+
+dir=$PWD
+if [[ ! $(which ghost) ]]; then
+    npm install ghost-cli@latest -g
+    adduser gsetup --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
+    mkdir -p /opt/ghost
+    chown gsetup:gsetup /opt/ghost
+    theghost=$(which ghost) && runuser -l myuser -c "cd /opt/ghost && $theghost install -D --no-prompt"
+fi
+
+# Copy over our Quick Install App
+cd $dir
+rsync -r ./Installers/ /usr/local/hestia/web/src/app/WebApp/Installers/
+
+# Notify installation has finished
+/usr/local/hestia/bin/v-add-user-notification admin "Ghost" "&#128123; Ghost plugin has finished installing."

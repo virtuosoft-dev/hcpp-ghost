@@ -1,0 +1,9 @@
+#!/bin/bash
+
+############################################
+# Uninstall Ghost
+############################################
+rm -rf /opt/ghost
+
+# Remove Quick Install App
+npm remove -g ghost-cli
