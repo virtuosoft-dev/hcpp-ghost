@@ -16,7 +16,7 @@ class GhostSetup extends BaseSetup {
 	protected $appname = "ghost";
 	protected $config = [
 		"form" => [
-			"ghost_username" => ["value" => "nradmin"],
+			"ghost_username" => ["value" => "gadmin"],
 			"ghost_password" => "password",
             "ghost_email" => ["value" => ""],
 			"ghost_folder" => ["type" => "text", "value" => "", "placeholder" => "/", "label" => "Install Directory"],
