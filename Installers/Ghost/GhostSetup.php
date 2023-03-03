@@ -9,7 +9,11 @@ class GhostSetup extends BaseSetup {
 		"name" => "Ghost",
 		"group" => "cms",
 		"enabled" => true,
-		"version" => "latest",
+		"version" => (function() {
+			$v = shell_exec( 'ls -la /opt/ghost/current' );
+			$v = trim( array_pop( explode( '/', $v ) ) );
+			return $v;
+		})(),
 		"thumbnail" => "ghost-thumb.png",
 	];
 
