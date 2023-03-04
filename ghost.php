@@ -42,10 +42,9 @@ if ( ! class_exists( 'Ghost') ) {
             shell_exec( $cmd );
 
             // Copy over ghost core files
-            $cmd = 'cd ' . escapeshellarg( $ghost_folder ) . ' && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cp /opt/ghost/.ghost-cli ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/content ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/current ./"';
+            $cmd = 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp /opt/ghost/.ghost-cli ./" && ';
+            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/content ./" && ';
+            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/current ./"';
             $hcpp->log( 'ghost->setup' );
             $hcpp->log( $cmd );
             $r = shell_exec( $cmd );
