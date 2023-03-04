@@ -45,10 +45,7 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd = 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp /opt/ghost/.ghost-cli ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/content ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/current ./"';
-            $hcpp->log( 'ghost->setup' );
-            $hcpp->log( $cmd );
-            $r = shell_exec( $cmd );
-            $hcpp->log( $r );
+            shell_exec( $cmd );
 
             // Copy over ghost config files
             $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
@@ -84,24 +81,44 @@ if ( ! class_exists( 'Ghost') ) {
                 $hcpp->nodeapp->startup_apps( $nodeapp_folder );
                 $hcpp->run( "restart-proxy" );
             }
+            sleep(5);
 
             // Await startup of Ghost and POST credentials to complete setup
-            $post_url = $url . '/ghost/#/setup';
+            $post_url = $url . '/ghost/api/admin/authentication/setup/';
             $retry = 0;
             while( ! $this->is_url_available( $post_url ) ) {
                 sleep( 1 );
                 $retry++;
-                if ( $retry > 30 ) {
+                if ( $retry > 45 ) {
                     $hcpp->log( "Ghost failed to start up" );
                     break;
                 }
             }
-            
 
-            // Setup ghost if creds given
-            // http://test3.openmy.info/ghost/#/setup
-            // Start up ghost
-            // export NODE_ENV=production;node current/index.js
+            // POST to Ghost setup to complete installation
+            $data = array(
+                'setup' => [array(
+                    'blogTitle' => $options['ghost_title'],
+                    'name' => $options['ghost_fullname'],
+                    'email' => $options['ghost_email'],
+                    'password' => $options['ghost_password'],
+                )]
+            );
+            $curl = curl_init($post_url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json; charset=UTF-8',
+                'Accept: application/json, text/javascript, */*; q=0.01',
+                'Accept-Language: en-US,en;q=0.9',
+                'Accept-Encoding: gzip, deflate',
+                'Connection: keep-alive',
+                'X-Requested-With: XMLHttpRequest',
+                'App-Pragma: no-cache',
+            ));
+            curl_exec($curl);
+            curl_close($curl);
         }
 
         public function is_url_available( $url ) {
@@ -156,17 +173,17 @@ if ( ! class_exists( 'Ghost') ) {
                 <script>
                     $(function() {
                         $("label[for=webapp_php_version]").parent().css("display", "none");
-                        let borderColor = $("#webapp_ghost_username").css("border-color");
+                        let borderColor = $("#webapp_ghost_fullname").css("border-color");
                         let toolbar = $(".l-center.edit").html();
                         function nr_validate() {
-                            if ( $("#webapp_ghost_username").val().trim() == "" || $("#webapp_ghost_password").val().trim() == "" || $("#webapp_ghost_email").val().trim() == "" ) {
+                            if ( $("#webapp_ghost_fullname").val().trim() == "" || $("#webapp_ghost_password").val().trim() == "" || $("#webapp_ghost_email").val().trim() == "" ) {
                                 $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "0.5").css("cursor", "not-allowed");
-                                if ($("#webapp_ghost_username").val().trim() == "") {
-                                    $("#webapp_ghost_username").css("border-color", "red");
+                                if ($("#webapp_ghost_fullname").val().trim() == "") {
+                                    $("#webapp_ghost_fullname").css("border-color", "red");
                                 }else{
-                                    $("#webapp_ghost_username").css("border-color", borderColor);
+                                    $("#webapp_ghost_fullname").css("border-color", borderColor);
                                 }
-                                if ($("#webapp_ghost_password").val().trim() == "") {
+                                if ($("#webapp_ghost_password").val().trim().length < 10) {
                                     $("#webapp_ghost_password").css("border-color", "red");
                                 }else{
                                     $("#webapp_ghost_password").css("border-color", borderColor);
@@ -179,7 +196,7 @@ if ( ! class_exists( 'Ghost') ) {
                                 return false;
                             }else{
                                 $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "1").css("cursor", "");
-                                $("#webapp_ghost_username").css("border-color", borderColor);
+                                $("#webapp_ghost_fullname").css("border-color", borderColor);
                                 $("#webapp_ghost_password").css("border-color", borderColor);
                                 $("#webapp_ghost_email").css("border-color", borderColor);
                                 return true;
@@ -198,7 +215,7 @@ if ( ! class_exists( 'Ghost') ) {
                                 e.preventDefault();
                             }
                         });
-                        $("#webapp_ghost_username").blur(nr_validate).keyup(nr_validate);
+                        $("#webapp_ghost_fullname").blur(nr_validate).keyup(nr_validate);
                         $("#webapp_ghost_password").blur(nr_validate).keyup(nr_validate);
                         $("#webapp_ghost_email").blur(nr_validate).keyup(nr_validate);
                         $(".generate").click(function() {
