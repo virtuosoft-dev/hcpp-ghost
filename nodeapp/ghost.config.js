@@ -7,6 +7,7 @@ module.exports = {
         nodeapp.script = 'current/index.js';
 
         // Update the env variable based on the mode (production or debug)
+        nodeapp.env = {};
         if (nodeapp.hasOwnProperty('_debugPort')) {
             nodeapp.env.NODE_ENV = 'development';
         }else{
