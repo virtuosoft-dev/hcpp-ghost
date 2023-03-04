@@ -42,9 +42,9 @@ if ( ! class_exists( 'Ghost') ) {
             shell_exec( $cmd );
 
             // Copy over ghost core files
-            $cmd = 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp /opt/ghost/.ghost-cli ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/content ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $nodeapp_folder ) . '; cp -r /opt/ghost/current ./"';
+            $cmd = 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp /opt/ghost/.ghost-cli ./" && ';
+            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp -r /opt/ghost/content ./" && ';
+            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp -r /opt/ghost/current ./"';
             shell_exec( $cmd );
 
             // Copy over ghost config files
@@ -68,7 +68,7 @@ if ( ! class_exists( 'Ghost') ) {
                 $url = "https://$domain" . $subfolder;
             }
             $config = str_replace( '%ghost_url%', $url, $config );
-            $config = str_replace( '%ghost_content%', $ghost_folder . 'content', $config );
+            $config = str_replace( '%ghost_content%', rtrim($ghost_folder, '/') . '/content', $config );
 
             file_put_contents( $ghost_folder . '/config.development.json', $config );
             file_put_contents( $ghost_folder . '/config.production.json', $config );
