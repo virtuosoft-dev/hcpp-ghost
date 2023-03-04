@@ -46,7 +46,7 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'runuser -l ' . $user . ' -c "cp /opt/ghost/.ghost-cli ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/content ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/current ./"';
-            $hcpp->( 'ghost->setup' );
+            $hcpp->log( 'ghost->setup' );
             $hcpp->log( $cmd );
             $r = shell_exec( $cmd );
             $hcpp->log( $r );
