@@ -71,7 +71,7 @@ if ( ! class_exists( 'Ghost') ) {
                 $url = "https://$domain" . $subfolder;
             }
             $config = str_replace( '%ghost_url%', $url, $config );
-            $config = str_replace( '%ghost_content%', $ghost_folder . '/content', $config );
+            $config = str_replace( '%ghost_content%', $ghost_folder . 'content', $config );
 
             file_put_contents( $ghost_folder . '/config.development.json', $config );
             file_put_contents( $ghost_folder . '/config.production.json', $config );
@@ -87,11 +87,35 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Await startup of Ghost and POST credentials to complete setup
             $post_url = $url . '/ghost/#/setup';
+            $retry = 0;
+            while( ! $this->is_url_available( $post_url ) ) {
+                sleep( 1 );
+                $retry++;
+                if ( $retry > 30 ) {
+                    $hcpp->log( "Ghost failed to start up" );
+                    break;
+                }
+            }
+            
 
             // Setup ghost if creds given
             // http://test3.openmy.info/ghost/#/setup
             // Start up ghost
             // export NODE_ENV=production;node current/index.js
+        }
+
+        public function is_url_available( $url ) {
+            $ch = curl_init( $url );
+            curl_setopt( $ch, CURLOPT_NOBODY, true );
+            curl_exec( $ch );
+            $code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+            if ( $code == 200 ) {
+                $status = true;
+            }else{
+                $status = false;
+            }
+            curl_close( $ch );
+            return $status;
         }
 
         // Customize the install page
