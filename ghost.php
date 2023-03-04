@@ -46,7 +46,10 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'runuser -l ' . $user . ' -c "cp /opt/ghost/.ghost-cli ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/content ./" && ';
             $cmd .= 'runuser -l ' . $user . ' -c "cp -r /opt/ghost/current ./"';
-            shell_exec( $cmd );
+            $hcpp->( 'ghost->setup' );
+            $hcpp->log( $cmd );
+            $r = shell_exec( $cmd );
+            $hcpp->log( $r );
 
             // Copy over ghost config files
             $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
@@ -69,7 +72,7 @@ if ( ! class_exists( 'Ghost') ) {
                 $url = "https://$domain" . $subfolder;
             }
             $config = str_replace( '%ghost_url%', $url, $config );
-            $config = str_replace( '%ghost_content%', $url, $ghost_folder . '/content' );
+            $config = str_replace( '%ghost_content%', $ghost_folder . '/content', $config );
 
             file_put_contents( $ghost_folder . '/config.development.json', $config );
             file_put_contents( $ghost_folder . '/config.production.json', $config );
