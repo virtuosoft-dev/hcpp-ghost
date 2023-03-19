@@ -8,3 +8,4 @@ rm -rf /opt/ghost
 # Remove Quick Install App
 npm remove -g ghost-cli
 deluser gsetup
+rm -rf /home/gsetup
