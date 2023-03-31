@@ -140,8 +140,8 @@ if ( ! class_exists( 'Ghost') ) {
             global $hcpp;
             $hcpp->log( "ghost->render_page");
             $hcpp->log( $_SERVER['REQUEST_URI'] );
-            $hcpp->log( strpos( $_SERVER['REQUEST_URI'], '/add/webapp/?app=Ghost&' ) );
-            if ( strpos( $_SERVER['REQUEST_URI'], '/add/webapp/?app=Ghost&' ) === false ) return $args;
+            $hcpp->log( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false && $args['page'] == 'setup_webapp' );
+            if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false && $args['page'] == 'setup_webapp' ) return $args;
             $content = $args['content'];
             $user = trim($args['user'], "'");
             $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
