@@ -138,13 +138,14 @@ if ( ! class_exists( 'Ghost') ) {
         // Customize the install page
         public function render_page( $args ) {
             global $hcpp;
-            $hcpp->log( "ghost->render_page");
-            $hcpp->log( $_SERVER['REQUEST_URI'] );
-            $hcpp->log( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false && $args['page'] == 'setup_webapp' );
             if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false && $args['page'] == 'setup_webapp' ) return $args;
             $content = $args['content'];
             $user = trim($args['user'], "'");
             $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
+
+            $hcpp->log( "ghost->render_page");
+            $hcpp->log( $_SERVER['REQUEST_URI'] );
+            $hcpp->log( $shell );
 
             // Suppress Data loss alert, and PHP version selector
             $content = '<style>.alert.alert-info.alert-with-icon{display:none;}</style>' . $content;
