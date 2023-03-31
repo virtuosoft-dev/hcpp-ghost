@@ -143,10 +143,6 @@ if ( ! class_exists( 'Ghost') ) {
             $user = trim($args['user'], "'");
             $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
 
-            $hcpp->log( "ghost->render_page");
-            $hcpp->log( $_SERVER['REQUEST_URI'] );
-            $hcpp->log( $shell );
-
             // Suppress Data loss alert, and PHP version selector
             $content = '<style>.alert.alert-info{display:none;}</style>' . $content;
             if ( $shell != 'bash' ) {
