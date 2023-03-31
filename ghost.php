@@ -138,6 +138,9 @@ if ( ! class_exists( 'Ghost') ) {
         // Customize the install page
         public function render_page( $args ) {
             global $hcpp;
+            $hcpp->log( "ghost->render_page");
+            $hcpp->log( $_SERVER['REQUEST_URI'] );
+            $hcpp->log( strpos( $_SERVER['REQUEST_URI'], '/add/webapp/?app=Ghost&' ) );
             if ( strpos( $_SERVER['REQUEST_URI'], '/add/webapp/?app=Ghost&' ) === false ) return $args;
             $content = $args['content'];
             $user = trim($args['user'], "'");
@@ -172,60 +175,60 @@ if ( ! class_exists( 'Ghost') ) {
                 $msg .= '
                 <script>
                     (function($) {
-                    $(function() {
-                        $("label[for=webapp_php_version]").parent().css("display", "none");
-                        let borderColor = $("#webapp_ghost_fullname").css("border-color");
-                        let toolbar = $(".l-center.edit").html();
-                        function nr_validate() {
-                            if ( $("#webapp_ghost_fullname").val().trim() == "" || $("#webapp_ghost_password").val().trim() == "" || $("#webapp_ghost_email").val().trim() == "" ) {
-                                $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "0.5").css("cursor", "not-allowed");
-                                if ($("#webapp_ghost_fullname").val().trim() == "") {
-                                    $("#webapp_ghost_fullname").css("border-color", "red");
+                        $(function() {
+                            $("label[for=webapp_php_version]").parent().css("display", "none");
+                            let borderColor = $("#webapp_ghost_fullname").css("border-color");
+                            let toolbar = $(".l-center.edit").html();
+                            function nr_validate() {
+                                if ( $("#webapp_ghost_fullname").val().trim() == "" || $("#webapp_ghost_password").val().trim() == "" || $("#webapp_ghost_email").val().trim() == "" ) {
+                                    $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "0.5").css("cursor", "not-allowed");
+                                    if ($("#webapp_ghost_fullname").val().trim() == "") {
+                                        $("#webapp_ghost_fullname").css("border-color", "red");
+                                    }else{
+                                        $("#webapp_ghost_fullname").css("border-color", borderColor);
+                                    }
+                                    if ($("#webapp_ghost_password").val().trim().length < 10) {
+                                        $("#webapp_ghost_password").css("border-color", "red");
+                                    }else{
+                                        $("#webapp_ghost_password").css("border-color", borderColor);
+                                    }
+                                    if ($("#webapp_ghost_email").val().trim() == "") {
+                                        $("#webapp_ghost_email").css("border-color", "red");
+                                    }else{
+                                        $("#webapp_ghost_email").css("border-color", borderColor);
+                                    }
+                                    return false;
                                 }else{
+                                    $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "1").css("cursor", "");
                                     $("#webapp_ghost_fullname").css("border-color", borderColor);
-                                }
-                                if ($("#webapp_ghost_password").val().trim().length < 10) {
-                                    $("#webapp_ghost_password").css("border-color", "red");
-                                }else{
                                     $("#webapp_ghost_password").css("border-color", borderColor);
-                                }
-                                if ($("#webapp_ghost_email").val().trim() == "") {
-                                    $("#webapp_ghost_email").css("border-color", "red");
-                                }else{
                                     $("#webapp_ghost_email").css("border-color", borderColor);
+                                    return true;
                                 }
-                                return false;
-                            }else{
-                                $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "1").css("cursor", "");
-                                $("#webapp_ghost_fullname").css("border-color", borderColor);
-                                $("#webapp_ghost_password").css("border-color", borderColor);
-                                $("#webapp_ghost_email").css("border-color", borderColor);
-                                return true;
-                            }
-                        };
-        
-                        // Override the form submition
-                        $(".l-unit-toolbar__buttonstrip.float-right a").removeAttr("data-action").removeAttr("data-id").click(function() {
-                            if ( nr_validate() ) {
-                                $(".l-sort.clearfix").html("<div class=\"l-unit-toolbar__buttonstrip\"></div><div class=\"l-unit-toolbar__buttonstrip float-right\"><div><div class=\"timer-container\" style=\"float:right;\"><div class=\"timer-button spinner\"><div class=\"spinner-inner\"></div><div class=\"spinner-mask\"></div> <div class=\"spinner-mask-two\"></div></div></div></div></div>");
-                                $("#vstobjects").submit();
-                            }
+                            };
+            
+                            // Override the form submition
+                            $(".l-unit-toolbar__buttonstrip.float-right a").removeAttr("data-action").removeAttr("data-id").click(function() {
+                                if ( nr_validate() ) {
+                                    $(".l-sort.clearfix").html("<div class=\"l-unit-toolbar__buttonstrip\"></div><div class=\"l-unit-toolbar__buttonstrip float-right\"><div><div class=\"timer-container\" style=\"float:right;\"><div class=\"timer-button spinner\"><div class=\"spinner-inner\"></div><div class=\"spinner-mask\"></div> <div class=\"spinner-mask-two\"></div></div></div></div></div>");
+                                    $("#vstobjects").submit();
+                                }
+                            });
+                            $("#vstobjects").submit(function(e) {
+                                if ( !nr_validate() ) {
+                                    e.preventDefault();
+                                }
+                            });
+                            $("#webapp_ghost_fullname").blur(nr_validate).keyup(nr_validate);
+                            $("#webapp_ghost_password").blur(nr_validate).keyup(nr_validate);
+                            $("#webapp_ghost_email").blur(nr_validate).keyup(nr_validate);
+                            $(".generate").click(function() {
+                                setTimeout(function() {
+                                    nr_validate();
+                                }, 500)
+                            });
+                            nr_validate();
                         });
-                        $("#vstobjects").submit(function(e) {
-                            if ( !nr_validate() ) {
-                                e.preventDefault();
-                            }
-                        });
-                        $("#webapp_ghost_fullname").blur(nr_validate).keyup(nr_validate);
-                        $("#webapp_ghost_password").blur(nr_validate).keyup(nr_validate);
-                        $("#webapp_ghost_email").blur(nr_validate).keyup(nr_validate);
-                        $(".generate").click(function() {
-                            setTimeout(function() {
-                                nr_validate();
-                            }, 500)
-                        });
-                        nr_validate();
-                    });
                     })(jQuery);
                 </script>
                 ';
