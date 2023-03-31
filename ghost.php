@@ -148,7 +148,7 @@ if ( ! class_exists( 'Ghost') ) {
             $hcpp->log( $shell );
 
             // Suppress Data loss alert, and PHP version selector
-            $content = '<style>.alert.alert-info.alert-with-icon{display:none;}</style>' . $content;
+            $content = '<style>.alert.alert-info{display:none;}</style>' . $content;
             if ( $shell != 'bash' ) {
 
                 // Display bash requirement
@@ -234,7 +234,11 @@ if ( ! class_exists( 'Ghost') ) {
                 </script>
                 ';
             }
-            $content = str_replace( '<div class="app-form">', '<div class="app-form">' . $msg, $content );
+            if ( strpos( '<div class="form-container">', $content ) !== false ) {
+                $content = str_replace( '<div class="form-container">', '<div class="form-container">' . $msg, $content ); // Hestia 1.7.X
+            }else{
+                $content = str_replace( '<div class="app-form">', '<div class="app-form">' . $msg, $content ); // Hestia 1.6.X
+            }
             $args['content'] = $content;
             return $args;
         }
