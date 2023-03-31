@@ -171,7 +171,8 @@ if ( ! class_exists( 'Ghost') ) {
                 // Enforce username and password, remove PHP version
                 $msg .= '
                 <script>
-                    $(function() {
+                    (function($){
+                        (function() {
                         $("label[for=webapp_php_version]").parent().css("display", "none");
                         let borderColor = $("#webapp_ghost_fullname").css("border-color");
                         let toolbar = $(".l-center.edit").html();
@@ -224,7 +225,8 @@ if ( ! class_exists( 'Ghost') ) {
                             }, 500)
                         });
                         nr_validate();
-                    });
+                        });
+                    })(jQuery);
                 </script>
                 ';
             }
