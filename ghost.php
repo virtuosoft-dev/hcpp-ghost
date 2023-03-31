@@ -230,6 +230,8 @@ if ( ! class_exists( 'Ghost') ) {
                 </script>
                 ';
             }
+            $hcpp->log( 'ghost->render_page' );
+            $hcpp->log( strpos( '<div class="form-container">', $content ) );
             if ( strpos( '<div class="form-container">', $content ) !== false ) {
                 $content = str_replace( '<div class="form-container">', '<div class="form-container">' . $msg, $content ); // Hestia 1.7.X
             }else{
