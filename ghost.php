@@ -138,7 +138,7 @@ if ( ! class_exists( 'Ghost') ) {
         // Customize the install page
         public function render_page( $args ) {
             global $hcpp;
-            if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false && $args['page'] == 'setup_webapp' ) return $args;
+            if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) !== false && $args['page'] == 'setup_webapp' ) return $args;
             $content = $args['content'];
             $user = trim($args['user'], "'");
             $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
