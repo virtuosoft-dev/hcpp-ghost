@@ -144,7 +144,7 @@ if ( ! class_exists( 'Ghost') ) {
             $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
 
             // Suppress Data loss alert, and PHP version selector
-            $content = '<style>.alert.alert-info{display:none;}</style>' . $content;
+            $content = '<style>#vstobjects > div > div.u-mt20 > div:nth-child(6),.alert.alert-info{display:none;}</style>' . $content;
             if ( $shell != 'bash' ) {
 
                 // Display bash requirement
