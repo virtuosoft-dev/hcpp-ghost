@@ -1,8 +1,10 @@
 <?php
 /**
  * Plugin Name: Ghost
- * Plugin URI: https://github.com/steveorevo/hestiacp-ghost
+ * Plugin URI: https://github.com/virtuosoft-dev/hcpp-ghost
  * Description: Ghost is a plugin for HestiaCP that allows you to Quick Install a Ghost instance.
+ * Version: 1.0.0
+ * Author: Stephen J. Carnam
  */
 
 // Register the install and uninstall scripts
