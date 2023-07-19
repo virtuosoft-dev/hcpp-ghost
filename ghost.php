@@ -17,7 +17,7 @@ if ( ! class_exists( 'Ghost') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->ghost = $this;
-            $hcpp->add_action( 'invoke_plugin', [ $this, 'setup' ] );
+            $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'setup' ] );
             $hcpp->add_action( 'render_page', [ $this, 'render_page' ] );
         }
 
