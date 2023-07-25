@@ -18,7 +18,7 @@ if ( ! class_exists( 'Ghost') ) {
             global $hcpp;
             $hcpp->ghost = $this;
             $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'setup' ] );
-            $hcpp->add_action( 'render_page', [ $this, 'render_page' ] );
+            $hcpp->add_action( 'hcpp_render_page', [ $this, 'hcpp_render_page' ] );
         }
 
         // Setup Ghost with the given user options
@@ -136,7 +136,7 @@ if ( ! class_exists( 'Ghost') ) {
         }
 
         // Customize the install page
-        public function render_page( $args ) {
+        public function hcpp_render_page( $args ) {
             global $hcpp;
             if ( $args['page'] !== 'setup_webapp') return $args;
             if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false ) return $args;
