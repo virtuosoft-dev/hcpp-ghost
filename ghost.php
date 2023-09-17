@@ -90,7 +90,7 @@ if ( ! class_exists( 'Ghost') ) {
             while( ! $this->is_url_available( $post_url ) ) {
                 sleep( 1 );
                 $retry++;
-                if ( $retry > 45 ) {
+                if ( $retry > 300 ) {
                     $hcpp->log( "Ghost failed to start up" );
                     break;
                 }
