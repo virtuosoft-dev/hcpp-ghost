@@ -87,7 +87,7 @@ if ( ! class_exists( 'Ghost') ) {
             // Await startup of Ghost and POST credentials to complete setup
             $post_url = $url . '/ghost/#/setup';
             $retry = 0;
-            while( ! $this->is_url_available( $post_url ) ) {
+            while( ! $this->is_form_ready( $post_url ) ) {
                 sleep( 1 );
                 $retry++;
                 if ( $retry > 300 ) {
@@ -122,18 +122,22 @@ if ( ! class_exists( 'Ghost') ) {
             curl_close($curl);
         }
 
-        public function is_url_available( $url ) {
-            $ch = curl_init( $url );
-            curl_setopt( $ch, CURLOPT_NOBODY, true );
-            curl_exec( $ch );
-            $code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-            if ( $code == 200 ) {
-                $status = true;
-            }else{
-                $status = false;
+        public function is_form_ready( $url ) {
+            // Perform a HEAD request to get the HTTP response code
+            $headers = get_headers($url, 1);
+
+            if (strpos($headers[0], '200') !== false) {
+                // If the HTTP response code is 200 (OK), fetch the content
+                $content = file_get_contents($url);
+                
+                if (strpos($content, '<form id="setup"') !== false) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
             }
-            curl_close( $ch );
-            return $status;
         }
 
         // Customize the install page
