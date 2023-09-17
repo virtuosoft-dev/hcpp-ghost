@@ -85,7 +85,7 @@ if ( ! class_exists( 'Ghost') ) {
             sleep(5);
 
             // Await startup of Ghost and POST credentials to complete setup
-            $post_url = $url . '/ghost/api/admin/authentication/setup/';
+            $post_url = $url . '/ghost/#/setup';
             $retry = 0;
             while( ! $this->is_url_available( $post_url ) ) {
                 sleep( 1 );
@@ -99,7 +99,7 @@ if ( ! class_exists( 'Ghost') ) {
             // POST to Ghost setup to complete installation
             $data = array(
                 'setup' => [array(
-                    'blogTitle' => $options['ghost_title'],
+                    'blog-title' => $options['ghost_title'],
                     'name' => $options['ghost_fullname'],
                     'email' => $options['ghost_email'],
                     'password' => $options['ghost_password'],
