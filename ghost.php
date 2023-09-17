@@ -39,7 +39,7 @@ if ( ! class_exists( 'Ghost') ) {
             // Create the nodeapp folder 
             $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " && ";
             $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder );
-            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
+            $cmd .= ' runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
             $cmd .= $user . '_' . $options['database_user'] . ' --dbpass ' . $options['database_password'];
             $cmd .= ' --port 3306 --dbname ' . $user . '_' . $options['database_name'] . ' --mail Sendmail';
