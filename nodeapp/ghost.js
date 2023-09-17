@@ -4,10 +4,11 @@
 const { exec } = require('child_process');
 const startCmd = 'ghost start';
 const stopCmd = 'ghost stop';
+const nvmCmd = 'bash -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use && ';
 
 const start = () => {
   console.log('Starting ghost...');
-  exec(startCmd, (error, stdout, stderr) => {
+  exec(nvmCmd + startCmd + '"', (error, stdout, stderr) => {
     if (error) {
       console.error(`Error starting ghost: ${error}`);
     } else {
@@ -18,7 +19,7 @@ const start = () => {
 
 const stop = () => {
   console.log('Stopping ghost...');
-  exec(stopCmd, (error, stdout, stderr) => {
+  exec(nvmCmd + stopCmd + '"', (error, stdout, stderr) => {
     if (error) {
       console.error(`Error stopping ghost: ${error}`);
     } else {
