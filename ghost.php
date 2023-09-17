@@ -44,7 +44,8 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
             $cmd .= $user . '_' . $options['database_user'] . ' --dbpass ' . $options['database_password'];
             $cmd .= ' --port 3306 --dbname ' . $user . '_' . $options['database_name'] . ' --mail Sendmail';
-            $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx"';
+            $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx && ';
+            $cmd .= 'cp -R ' . __DIR__ . '/nodeapp ' . $ghost_folder . '"';
             $hcpp->log( $cmd );
             $hcpp->log( shell_exec( $cmd ) );
 
@@ -165,9 +166,9 @@ if ( ! class_exists( 'Ghost') ) {
         
                 // Display install information
                 $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'The Ghost instance lives inside the "nodeapp" folder (adjacent to "public_html"). ';
-                $msg .= 'It can be a standalone instance in the domain root, or in a subfolder using the ';
-                $msg .= '<b>Install Directory</b> field below.</span><br><span style="font-style:italic;color:darkorange;">';
+                $msg .= 'Please be patient; Ghost may take a <b>few minutes</b> to complete install! Ghost lives ';
+                $msg .= 'inside the "nodeapp" folder (adjacent to "public_html"). It can be a standalone instance in the domain root, or in a ';
+                $msg .= 'subfolder using the <b>Install Directory</b> field below.</span><br><span style="font-style:italic;color:darkorange;">';
                 $msg .= 'Files will be overwritten; be sure the specified <span style="font-weight:bold">Install Directory</span> is empty!</span></div><br>';
                 
                 // Enforce username and password, remove PHP version
