@@ -9,7 +9,7 @@ class GhostSetup extends BaseSetup {
 		"name" => "Ghost",
 		"group" => "cms",
 		"enabled" => true,
-		"version" => "",
+		"version" => "Latest",
 		"thumbnail" => "ghost-thumb.png",
 	];
 
@@ -32,13 +32,6 @@ class GhostSetup extends BaseSetup {
 			],
 		],
 	];
-
-	public function __construct($domain, $appcontext) {
-		$v = shell_exec( 'ls -la /opt/ghost/current' );
-		$v = trim( array_pop( explode( '/', $v ) ) );
-		$this->appInfo['version'] = $v;
-		parent::__construct($domain, $appcontext);
-	}
 
 	public function install(array $options = null) {
 		global $hcpp;

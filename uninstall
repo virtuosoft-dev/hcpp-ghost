@@ -3,9 +3,8 @@
 ############################################
 # Uninstall Ghost
 ############################################
-rm -rf /opt/ghost
-
-# Remove Quick Install App
-npm remove -g ghost-cli
-deluser gsetup
-rm -rf /home/gsetup
+export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh
+nvm use v18
+if [[ ! $(which ghost) ]]; then
+    npm uninstall ghost-cli@latest -g
+fi

@@ -14,7 +14,7 @@
       }
     },
     "mail": {
-      "transport": "Direct"
+      "transport": "Sendmail"
     },
     "logging": {
       "transports": [

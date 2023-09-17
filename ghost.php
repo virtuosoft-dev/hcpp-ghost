@@ -39,13 +39,13 @@ if ( ! class_exists( 'Ghost') ) {
             // Create the nodeapp folder 
             $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " && ";
             $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder );
-            shell_exec( $cmd );
-
-            // Copy over ghost core files
-            $cmd = 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp /opt/ghost/.ghost-cli ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp -r /opt/ghost/content ./" && ';
-            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . '; cp -r /opt/ghost/current ./"';
-            shell_exec( $cmd );
+            $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
+            $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
+            $cmd .= $user . '_' . $options['database_user'] . ' --dbpass ' . $options['database_password'];
+            $cmd .= ' --port 3306 --dbname ' . $user . '_' . $options['database_name'] . ' --mail Sendmail';
+            $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx';
+            $hcpp->log( $cmd );
+            $hcpp->log( shell_exec( $cmd ) );
 
             // Copy over ghost config files
             $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
