@@ -44,7 +44,7 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
             $cmd .= $user . '_' . $options['database_user'] . ' --dbpass ' . $options['database_password'];
             $cmd .= ' --port 3306 --dbname ' . $user . '_' . $options['database_name'] . ' --mail Sendmail';
-            $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx';
+            $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx"';
             $hcpp->log( $cmd );
             $hcpp->log( shell_exec( $cmd ) );
 
