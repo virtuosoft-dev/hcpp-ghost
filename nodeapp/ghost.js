@@ -2,8 +2,8 @@
  * Our shim for ghost and PM2 compatibility.
  */
 const { exec } = require('child_process');
-const startCmd = 'cd ' + __dirname + '/ghost run';
-const stopCmd = '';
+const startCmd = 'ghost start';
+const stopCmd = 'ghost stop';
 
 const start = () => {
   console.log('Starting ghost...');
