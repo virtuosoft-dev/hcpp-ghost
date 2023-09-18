@@ -35,6 +35,8 @@ module.exports = {
         config.server.port = nodeapp._port;
         config.paths.contentPath = contentPath;
         fs.writeFileSync(file, JSON.stringify(config, null, 2));
+        nodeapp.shutdown_with_message = true;
+        nodeapp.kill_timeout = 3000;
         return [nodeapp];
     })()
 }
