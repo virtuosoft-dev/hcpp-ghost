@@ -60,7 +60,7 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Fill out config.development.json and config.production.json
             $config = file_get_contents( $ghost_folder . '/config.development.json' );
-            $config = str_replace( '%database_name%', $user . '_' . $options['database_name'], $config );
+            $config = str_replace( '%database_name%', $user . '_' . $options['database_password'], $config );
             $config = str_replace( '%database_user%', $user . '_' . $options['database_user'], $config );
             $config = str_replace( '%database_password%', $options['database_password'], $config );
             $config = str_replace( '%ghost_port%', $port, $config );
@@ -74,6 +74,50 @@ if ( ! class_exists( 'Ghost') ) {
             file_put_contents( $ghost_folder . '/config.development.json', $config );
             file_put_contents( $ghost_folder . '/config.production.json', $config );
 
+            // Update the Ghost database with our title, name, email, and password.
+            try {
+
+                // Calculate the slug and hash the password
+                $hash = password_hash( $options['ghost_password'], PASSWORD_BCRYPT, ['cost' => 10] );
+                $slug = $slug = strtolower( $options['ghost_fullname'] ); 
+                $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
+                $slug = trim( $slug, '-' );
+                $slug = preg_replace( '/-+/', '-', $slug );
+
+                // Database connection details
+                $dbUser = $options['database_user'];
+                $dbPassword = $options['database_password'];
+                $dbName = $options['database_name'];
+            
+                // Initialize a PDO connection
+                $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+                // SQL statements with placeholders
+                $updateSettingsSQL = "UPDATE `settings` SET `value` = :title WHERE `key` = 'title';";
+                $updateUsersSQL = "UPDATE `users` SET `name` = :name, `slug` = :slug, `email` = :email, `password` = :password, `status` = 'active' WHERE `id` = 1;";
+            
+                // Prepare and execute the first SQL statement
+                $stmtSettings = $pdo->prepare($updateSettingsSQL);
+                $stmtSettings->bindParam(':title', $options['ghost_title']);
+                $stmtSettings->execute();
+            
+                // Prepare and execute the second SQL statement
+                $stmtUsers = $pdo->prepare($updateUsersSQL);
+                $stmtUsers->bindParam(':name', $options['ghost_fullname']);
+                $stmtUsers->bindParam(':slug', $slug);
+                $stmtUsers->bindParam(':email', $options['ghost_email']);
+                $stmtUsers->bindParam(':password', $hash);
+                $stmtUsers->execute();
+            
+                // Log the result or handle errors
+                $hcpp->log( "Ghost database updated correctly." );
+            } catch (PDOException $e) {
+
+                // Handle database errors
+                $hcpp->log("Error: " . $e->getMessage());
+            }
+
             // Update proxy and restart nginx
             if ( $nodeapp_folder . '/' == $ghost_folder ) {
                 $hcpp->run( "change-web-domain-proxy-tpl $user $domain NodeApp" );
@@ -81,63 +125,7 @@ if ( ! class_exists( 'Ghost') ) {
                 $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
                 $hcpp->nodeapp->startup_apps( $nodeapp_folder );
                 $hcpp->run( "restart-proxy" );
-            }
-            sleep(5);
-
-            // Await startup of Ghost and POST credentials to complete setup
-            $post_url = $url . '/ghost/#/setup';
-            $retry = 0;
-            while( ! $this->is_form_ready( $post_url ) ) {
-                sleep( 1 );
-                $retry++;
-                if ( $retry > 300 ) {
-                    $hcpp->log( "Ghost failed to start up" );
-                    break;
-                }
-            }
-
-            // POST to Ghost setup to complete installation
-            $data = array(
-                'setup' => [array(
-                    'blog-title' => $options['ghost_title'],
-                    'name' => $options['ghost_fullname'],
-                    'email' => $options['ghost_email'],
-                    'password' => $options['ghost_password'],
-                )]
-            );
-            $curl = curl_init($post_url);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json; charset=UTF-8',
-                'Accept: application/json, text/javascript, */*; q=0.01',
-                'Accept-Language: en-US,en;q=0.9',
-                'Accept-Encoding: gzip, deflate',
-                'Connection: keep-alive',
-                'X-Requested-With: XMLHttpRequest',
-                'App-Pragma: no-cache',
-            ));
-            curl_exec($curl);
-            curl_close($curl);
-        }
-
-        public function is_form_ready( $url ) {
-            // Perform a HEAD request to get the HTTP response code
-            $headers = get_headers($url, 1);
-
-            if (strpos($headers[0], '200') !== false) {
-                // If the HTTP response code is 200 (OK), fetch the content
-                $content = file_get_contents($url);
-                
-                if (strpos($content, '<form id="setup"') !== false) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
+            }            
         }
 
         // Customize the install page
@@ -169,10 +157,9 @@ if ( ! class_exists( 'Ghost') ) {
         
                 // Display install information
                 $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Please be patient; Ghost may take a <b>few minutes</b> to complete install! Ghost lives ';
-                $msg .= 'inside the "nodeapp" folder (adjacent to "public_html"). It can be a standalone instance in the domain root, or in a ';
-                $msg .= 'subfolder using the <b>Install Directory</b> field below.</span><br><span style="font-style:italic;color:darkorange;">';
-                $msg .= 'Files will be overwritten; be sure the specified <span style="font-weight:bold">Install Directory</span> is empty!</span></div><br>';
+                $msg .= 'Please be patient; Ghost installation may take <span style="font-weight:bold">';
+                $msg .= '<b>several minutes to complete install!</b></span> You can check the domain in an adjacent window. ';
+                $msg .= 'The specified <b>Install Directory</b> must be non-existent or empty.<br>';
                 
                 // Enforce username and password, remove PHP version
                 $msg .= '
