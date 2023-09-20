@@ -92,28 +92,35 @@ if ( ! class_exists( 'Ghost') ) {
             sleep(5);
             $dbUpdateRetries = 10;
             while ( $dbUpdateRetries-- > 0 ) {
-                // Initialize a PDO connection
-                $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-                // Check for the presence of 'title' in the 'settings' table
-                $stmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'title'");
-                $stmt->execute();
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($result && isset($result['value']) && !empty($result['value'])) {
-                    
-                    // Check the presence of 'name' in the 'users' table
-                    $stmt = $pdo->prepare("SELECT name FROM users WHERE `id` = 1");
+                try {
+                    // Initialize a PDO connection
+                    $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
+                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+                    // Check for the presence of 'title' in the 'settings' table
+                    $stmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'title'");
                     $stmt->execute();
                     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($result && isset($result['name']) && !empty($result['name'])) {
-                        $dbUpdateRetries = 0;
+                    if ($result && isset($result['value']) && !empty($result['value'])) {
+                        
+                        // Check the presence of 'name' in the 'users' table
+                        $stmt = $pdo->prepare("SELECT name FROM users WHERE `id` = 1");
+                        $stmt->execute();
+                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($result && isset($result['name']) && !empty($result['name'])) {
+                            $dbUpdateRetries = 0;
+                        } else {
+                            $hcpp->log("Ghost database not ready yet; no name found. Retrying in 5 seconds.");
+                            sleep(5);
+                        }
                     } else {
-                        $hcpp->log("Ghost database not ready yet; no name found. Retrying in 5 seconds.");
+                        $hcpp->log("Ghost database not ready yet; no title found. Retrying in 5 seconds.");
                         sleep(5);
                     }
-                } else {
-                    $hcpp->log("Ghost database not ready yet; no title found. Retrying in 5 seconds.");
+                } catch (PDOException $e) {
+
+                    // Handle database errors
+                    $hcpp->log( "Ghost database not ready yet; error: " . $e->getMessage() );
                     sleep(5);
                 }
             }
