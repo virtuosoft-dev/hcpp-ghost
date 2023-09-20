@@ -37,8 +37,8 @@ if ( ! class_exists( 'Ghost') ) {
             $ghost_folder = $nodeapp_folder . $ghost_folder;
 
             // Create the nodeapp folder 
-            $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " && ";
-            $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder ) . " && ";
+            $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " ; ";
+            $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder ) . " ; ";
             $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
             $cmd .= 'export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ';
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
@@ -157,9 +157,9 @@ if ( ! class_exists( 'Ghost') ) {
         
                 // Display install information
                 $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Please be patient; Ghost installation may take <span style="font-weight:bold">';
-                $msg .= '<b>several minutes to complete install!</b></span> You can check the domain in an adjacent window. ';
-                $msg .= 'The specified <b>Install Directory</b> must be non-existent or empty.<br>';
+                $msg .= 'Please be patient; Ghost installation may take <span style="font-weight:bold;font-style:italic;color:darkorange;">';
+                $msg .= 'several minutes to complete install!</span> You can check the domain in an adjacent window. ';
+                $msg .= 'The specified <b>Install Directory</b> must be non-existent or empty.<br><br>';
                 
                 // Enforce username and password, remove PHP version
                 $msg .= '
