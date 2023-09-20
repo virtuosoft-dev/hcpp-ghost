@@ -60,7 +60,7 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Fill out config.development.json and config.production.json
             $config = file_get_contents( $ghost_folder . '/config.development.json' );
-            $config = str_replace( '%database_name%', $user . '_' . $options['database_password'], $config );
+            $config = str_replace( '%database_name%', $user . '_' . $options['database_name'], $config );
             $config = str_replace( '%database_user%', $user . '_' . $options['database_user'], $config );
             $config = str_replace( '%database_password%', $options['database_password'], $config );
             $config = str_replace( '%ghost_port%', $port, $config );
@@ -117,6 +117,7 @@ if ( ! class_exists( 'Ghost') ) {
                 // Handle database errors
                 $hcpp->log("Error: " . $e->getMessage());
             }
+
 
             // Update proxy and restart nginx
             if ( $nodeapp_folder . '/' == $ghost_folder ) {
