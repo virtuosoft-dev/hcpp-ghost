@@ -82,49 +82,57 @@ if ( ! class_exists( 'Ghost') ) {
                 $hcpp->nodeapp->startup_apps( $nodeapp_folder );
                 $hcpp->run( "restart-proxy" );
             }
-            
+
             // Update the Ghost database with our title, name, email, and password.
-            try {
-
-                // Calculate the slug and hash the password
-                $hash = password_hash( $options['ghost_password'], PASSWORD_BCRYPT, ['cost' => 10] );
-                $slug = $slug = strtolower( $options['ghost_fullname'] ); 
-                $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
-                $slug = trim( $slug, '-' );
-                $slug = preg_replace( '/-+/', '-', $slug );
-
-                // Database connection details
-                $dbUser = $options['database_user'];
-                $dbPassword = $options['database_password'];
-                $dbName = $options['database_name'];
-            
-                // Initialize a PDO connection
-                $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-                // SQL statements with placeholders
-                $updateSettingsSQL = "UPDATE `settings` SET `value` = :title WHERE `key` = 'title';";
-                $updateUsersSQL = "UPDATE `users` SET `name` = :name, `slug` = :slug, `email` = :email, `password` = :password, `status` = 'active' WHERE `id` = 1;";
-            
-                // Prepare and execute the first SQL statement
-                $stmtSettings = $pdo->prepare($updateSettingsSQL);
-                $stmtSettings->bindParam(':title', $options['ghost_title']);
-                $stmtSettings->execute();
-            
-                // Prepare and execute the second SQL statement
-                $stmtUsers = $pdo->prepare($updateUsersSQL);
-                $stmtUsers->bindParam(':name', $options['ghost_fullname']);
-                $stmtUsers->bindParam(':slug', $slug);
-                $stmtUsers->bindParam(':email', $options['ghost_email']);
-                $stmtUsers->bindParam(':password', $hash);
-                $stmtUsers->execute();
-            
-                // Log the result or handle errors
-                $hcpp->log( "Ghost database updated correctly." );
-            } catch (PDOException $e) {
-
-                // Handle database errors
-                $hcpp->log("Error: " . $e->getMessage());
+            sleep(5);
+            $dbUpdateRetries = 10;
+            while ( $dbUpdateRetries-- > 0 ) {
+                $hcpp->log("Trying to update Ghost database.");
+                try {
+    
+                    // Calculate the slug and hash the password
+                    $hash = password_hash( $options['ghost_password'], PASSWORD_BCRYPT, ['cost' => 10] );
+                    $slug = $slug = strtolower( $options['ghost_fullname'] ); 
+                    $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
+                    $slug = trim( $slug, '-' );
+                    $slug = preg_replace( '/-+/', '-', $slug );
+    
+                    // Database connection details
+                    $dbUser = $options['database_user'];
+                    $dbPassword = $options['database_password'];
+                    $dbName = $options['database_name'];
+                
+                    // Initialize a PDO connection
+                    $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
+                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                
+                    // SQL statements with placeholders
+                    $updateSettingsSQL = "UPDATE `settings` SET `value` = :title WHERE `key` = 'title';";
+                    $updateUsersSQL = "UPDATE `users` SET `name` = :name, `slug` = :slug, `email` = :email, `password` = :password, `status` = 'active' WHERE `id` = 1;";
+                
+                    // Prepare and execute the first SQL statement
+                    $stmtSettings = $pdo->prepare($updateSettingsSQL);
+                    $stmtSettings->bindParam(':title', $options['ghost_title']);
+                    $stmtSettings->execute();
+                
+                    // Prepare and execute the second SQL statement
+                    $stmtUsers = $pdo->prepare($updateUsersSQL);
+                    $stmtUsers->bindParam(':name', $options['ghost_fullname']);
+                    $stmtUsers->bindParam(':slug', $slug);
+                    $stmtUsers->bindParam(':email', $options['ghost_email']);
+                    $stmtUsers->bindParam(':password', $hash);
+                    $stmtUsers->execute();
+                
+                    // Log the result or handle errors
+                    $hcpp->log( "Ghost database updated correctly." );
+                    $dbUpdateRetries = 0;
+                } catch (PDOException $e) {
+    
+                    // Handle database errors
+                    $hcpp->log("Error: " . $e->getMessage());
+                    $hcpp->log("Retrying in 5 seconds.");
+                    sleep(5);
+                }             
             }
         }
 
