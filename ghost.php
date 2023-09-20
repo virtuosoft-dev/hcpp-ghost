@@ -74,6 +74,15 @@ if ( ! class_exists( 'Ghost') ) {
             file_put_contents( $ghost_folder . '/config.development.json', $config );
             file_put_contents( $ghost_folder . '/config.production.json', $config );
 
+            // Update proxy and restart nginx
+            if ( $nodeapp_folder . '/' == $ghost_folder ) {
+                $hcpp->run( "change-web-domain-proxy-tpl $user $domain NodeApp" );
+            }else{
+                $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
+                $hcpp->nodeapp->startup_apps( $nodeapp_folder );
+                $hcpp->run( "restart-proxy" );
+            }
+            
             // Update the Ghost database with our title, name, email, and password.
             try {
 
@@ -117,16 +126,6 @@ if ( ! class_exists( 'Ghost') ) {
                 // Handle database errors
                 $hcpp->log("Error: " . $e->getMessage());
             }
-
-
-            // Update proxy and restart nginx
-            if ( $nodeapp_folder . '/' == $ghost_folder ) {
-                $hcpp->run( "change-web-domain-proxy-tpl $user $domain NodeApp" );
-            }else{
-                $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
-                $hcpp->nodeapp->startup_apps( $nodeapp_folder );
-                $hcpp->run( "restart-proxy" );
-            }            
         }
 
         // Customize the install page
