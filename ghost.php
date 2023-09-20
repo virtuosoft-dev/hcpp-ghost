@@ -166,7 +166,7 @@ if ( ! class_exists( 'Ghost') ) {
             }
             
             // Restart the ghost service to reflect DB changes
-            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "sleep 8 && export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh ; pm2 restart ghost-' . $domain . ' > /dev/null 2>&1 &"';
+            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "sleep 8 && touch ' . $ghost_folder . '/.restart/restart"';
             $hcpp->log( $cmd );
             shell_exec( $cmd );
         }
