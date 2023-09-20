@@ -29,6 +29,11 @@ if ( ! class_exists( 'Ghost') ) {
             $user = $options['user'];
             $domain = $options['domain'];
 
+            // Database connection details
+            $dbUser = $user . '_' . $options['database_user'];
+            $dbPassword = $options['database_password'];
+            $dbName = $user . '_' . $options['database_name'];
+
             // Copy the Ghost files to the user folder
             $ghost_folder = $options['ghost_folder'];
             if ( $ghost_folder == '' || $ghost_folder[0] != '/' ) $ghost_folder = '/' . $ghost_folder;
@@ -42,8 +47,8 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
             $cmd .= 'export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ';
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
-            $cmd .= $user . '_' . $options['database_user'] . ' --dbpass ' . $options['database_password'];
-            $cmd .= ' --port 3306 --dbname ' . $user . '_' . $options['database_name'] . ' --mail Sendmail';
+            $cmd .= $dbUser . ' --dbpass ' . $options['database_password'];
+            $cmd .= ' --port 3306 --dbname ' . $dbName . ' --mail Sendmail';
             $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx"';
             $hcpp->log( $cmd );
             $hcpp->log( shell_exec( $cmd ) );
@@ -60,8 +65,8 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Fill out config.development.json and config.production.json
             $config = file_get_contents( $ghost_folder . '/config.development.json' );
-            $config = str_replace( '%database_name%', $user . '_' . $options['database_name'], $config );
-            $config = str_replace( '%database_user%', $user . '_' . $options['database_user'], $config );
+            $config = str_replace( '%database_name%', $dbName, $config );
+            $config = str_replace( '%database_user%', $dbUser, $config );
             $config = str_replace( '%database_password%', $options['database_password'], $config );
             $config = str_replace( '%ghost_port%', $port, $config );
             $url = "http://$domain" . $subfolder;
@@ -96,11 +101,6 @@ if ( ! class_exists( 'Ghost') ) {
                     $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
                     $slug = trim( $slug, '-' );
                     $slug = preg_replace( '/-+/', '-', $slug );
-    
-                    // Database connection details
-                    $dbUser = $options['database_user'];
-                    $dbPassword = $options['database_password'];
-                    $dbName = $options['database_name'];
                 
                     // Initialize a PDO connection
                     $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
