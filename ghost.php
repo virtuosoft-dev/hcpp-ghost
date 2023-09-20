@@ -166,9 +166,9 @@ if ( ! class_exists( 'Ghost') ) {
             }
             
             // Restart the ghost service to reflect DB changes
-            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh ; pm2 restart ghost-' . $domain . '"';
+            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "sleep 8 && export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh ; pm2 restart ghost-' . $domain . ' > /dev/null 2>&1 &"';
             $hcpp->log( $cmd );
-            $hcpp->log( shell_exec( $cmd ) );
+            shell_exec( $cmd );
         }
 
         // Customize the install page
