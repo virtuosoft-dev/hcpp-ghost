@@ -47,7 +47,7 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
             $cmd .= 'export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ';
             $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
-            $cmd .= $dbUser . ' --dbpass ' . $options['database_password'];
+            $cmd .= $dbUser . ' --dbpass ' . $dbPassword;
             $cmd .= ' --port 3306 --dbname ' . $dbName . ' --mail Sendmail';
             $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx"';
             $hcpp->log( $cmd );
@@ -67,7 +67,7 @@ if ( ! class_exists( 'Ghost') ) {
             $config = file_get_contents( $ghost_folder . '/config.development.json' );
             $config = str_replace( '%database_name%', $dbName, $config );
             $config = str_replace( '%database_user%', $dbUser, $config );
-            $config = str_replace( '%database_password%', $options['database_password'], $config );
+            $config = str_replace( '%database_password%', $dbPassword, $config );
             $config = str_replace( '%ghost_port%', $port, $config );
             $url = "http://$domain" . $subfolder;
             if ( is_dir( "/home/$user/conf/web/$domain/ssl") ) {
