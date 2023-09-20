@@ -124,6 +124,8 @@ if ( ! class_exists( 'Ghost') ) {
                     sleep(5);
                 }
             }
+            sleep(5);
+
 
             // Update the Ghost database with our title, name, email, and password.
             try {
@@ -161,7 +163,12 @@ if ( ! class_exists( 'Ghost') ) {
             } catch (PDOException $e) {    
                 // Handle database errors
                 $hcpp->log("Error: " . $e->getMessage());
-            }             
+            }
+            
+            // Restart the ghost service to reflect DB changes
+            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh ; pm2 restart ghost-' . $domain . '"';
+            $hcpp->log( $cmd );
+            $hcpp->log( shell_exec( $cmd ) );
         }
 
         // Customize the install page
