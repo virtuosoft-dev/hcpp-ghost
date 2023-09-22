@@ -41,6 +41,10 @@ if ( ! class_exists( 'Ghost') ) {
             $subfolder = $ghost_folder;
             $ghost_folder = $nodeapp_folder . $ghost_folder;
 
+            // TODO: Accelerate installation: copy over from /opt/ghost,
+            // adjust symbolic links, .ghost-cli,
+            // then run "ghost update"
+
             // Create the nodeapp folder 
             $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " ; ";
             $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder ) . " ; ";
@@ -125,7 +129,6 @@ if ( ! class_exists( 'Ghost') ) {
                 }
             }
             sleep(5);
-
 
             // Update the Ghost database with our title, name, email, and password.
             try {
