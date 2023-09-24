@@ -17,7 +17,6 @@ if ( ! class_exists( 'Ghost') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->ghost = $this;
-            $hcpp->ghost->version = basename( readlink('/opt/ghost/current') );
             $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'setup' ] );
             $hcpp->add_action( 'hcpp_render_body', [ $this, 'hcpp_render_body' ] );
         }
@@ -182,7 +181,8 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Fill out version on app listing page
             if ( $args['page'] == 'list_webapps' ) {
-                $args['content'] = str_replace( '%ghost_version%', $hcpp->ghost->version, $args['content'] );
+                $version = shell_exec( 'basename $(readlink /opt/ghost/current)' );
+                $args['content'] = str_replace( '%ghost_version%', $version, $args['content'] );
                 return $args;
             }
 
