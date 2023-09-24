@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Copies a source folder to the destination folder via `rsync -a` and
+# fixes *absolute* links. Normally rsync only handles *relative* links
+# and preserves absolute links. This script searches for the copied
+# absolute links in the destination that are pointing to the original
+# source folder and updates them to reflect the new destination copy.
+#
+# Author: Stephen J. Carnam
+# Copyright (c) 2023 Virtuosoft / Stephen J. Carnam
+# License: MIT License
+# 
+
+# Check for the correct number of arguments
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <source folder> <destination folder>"
+    exit 1
+fi
+
+source_dir="$1"
+destination_dir="$2"
+
+# Ensure source directory ends with a trailing slash
+if [[ ! "$source_dir" == */ ]]; then
+    source_dir="$source_dir/"
+fi
+
+# Ensure destination directory ends with a trailing slash
+if [[ ! "$destination_dir" == */ ]]; then
+    destination_dir="$destination_dir/"
+fi
+
+# Perform the initial copy using rsync
+rsync -a "$source_dir" "$destination_dir"
+
+# Find absolute symbolic links within the destination directory
+absolute_links=()
+while IFS= read -r -d '' link; do
+    absolute_links+=("$link")
+done < <(find "$destination_dir" -type l -lname '/*' -print0)
+
+# Loop through the absolute links and update them if needed
+for link in "${absolute_links[@]}"; do
+
+    # Get the target of the symbolic link
+    target=$(readlink -f "$link")
+
+    # Check if the target contains the source directory path
+    if [[ "$target" == *"$source_dir"* ]]; then
+
+        # Replace the source directory path with the destination directory path
+        new_target="${target//$source_dir/$destination_dir}"
+
+        # Update the symbolic link to point to the new target
+        rm "$link"
+        ln -s "$new_target" "$link"
+        echo "Updated: $link -> $new_target"
+    fi
+done
+
+echo "Absolute symbolic links updated."
