@@ -181,7 +181,7 @@ if ( ! class_exists( 'Ghost') ) {
             global $hcpp;
 
             // Fill out version on app listing page
-            if ( $args['page'] == 'hcpp_render_body' ) {
+            if ( $args['page'] == 'list_webapps' ) {
                 $args['content'] = str_replace( '%ghost_version%', $hcpp->ghost->version, $args['content'] );
                 return $args;
             }
