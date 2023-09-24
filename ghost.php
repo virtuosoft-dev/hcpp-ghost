@@ -35,6 +35,7 @@ if ( ! class_exists( 'Ghost') ) {
             $dbName = $user . '_' . $options['database_name'];
 
             // Copy the Ghost files to the user folder
+            $ghost_version = basename( readlink('/opt/ghost/current') );
             $ghost_folder = $options['ghost_folder'];
             if ( $ghost_folder == '' || $ghost_folder[0] != '/' ) $ghost_folder = '/' . $ghost_folder;
             $nodeapp_folder = "/home/$user/web/$domain/nodeapp";
