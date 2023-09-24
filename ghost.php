@@ -17,6 +17,7 @@ if ( ! class_exists( 'Ghost') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->ghost = $this;
+            $hcpp->ghost->version = basename( readlink('/opt/ghost/current') );
             $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'setup' ] );
             $hcpp->add_action( 'hcpp_render_body', [ $this, 'hcpp_render_body' ] );
         }

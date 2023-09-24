@@ -9,7 +9,7 @@ class GhostSetup extends BaseSetup {
 		"name" => "Ghost",
 		"group" => "cms",
 		"enabled" => true,
-		"version" => basename( readlink('/opt/ghost/current') ),
+		"version" => "%ghost_version%",
 		"thumbnail" => "ghost-thumb.png",
 	];
 
