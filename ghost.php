@@ -179,6 +179,14 @@ if ( ! class_exists( 'Ghost') ) {
         // Customize the install page
         public function hcpp_render_body( $args ) {
             global $hcpp;
+
+            // Fill out version on app listing page
+            if ( $args['page'] == 'hcpp_render_body' ) {
+                $args['content'] = str_replace( '%ghost_version%', $hcpp->ghost->version, $args['content'] );
+                return $args;
+            }
+
+            // Customize the Ghost install page
             if ( $args['page'] !== 'setup_webapp') return $args;
             if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false ) return $args;
             $content = $args['content'];
