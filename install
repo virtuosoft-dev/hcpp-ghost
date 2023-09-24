@@ -14,11 +14,11 @@ fi
 if [ ! -d "/opt/ghost" ]; then
 
     mkdir -p /opt/ghost
-    if [ ! -d "/home/debian" ]; then
+    if [ -d "/home/debian" ]; then
         chown debian:debian /opt/ghost
         runuser -l debian -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ghost install --dir /opt/ghost --no-prompt"
     fi
-    if [ ! -d "/home/ubuntu" ]; then
+    if [ -d "/home/ubuntu" ]; then
         chown ubuntu:ubuntu /opt/ghost
         runuser -l ubuntu -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ghost install --dir /opt/ghost --no-prompt"
     fi
