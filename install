@@ -11,7 +11,7 @@ nvm use v18
 if [[ ! $(which ghost) ]]; then
     npm install ghost-cli@latest -g
 fi
-if [ ! -d "/opt/ghost" ]; then
+if [ ! -d "/opt/ghost/versions" ]; then
 
     mkdir -p /opt/ghost
     if [ -d "/home/debian" ]; then
