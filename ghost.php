@@ -214,8 +214,7 @@ if ( ! class_exists( 'Ghost') ) {
                 // Display install information
                 $msg = '<div style="margin-top:-20px;width:75%;"><span>';
                 $msg .= 'Please be patient; Ghost download &amp; installation may take <span style="font-weight:bold;font-style:italic;color:darkorange;">';
-                $msg .= 'several minutes to complete install!</span> You can check the domain in an adjacent window. ';
-                $msg .= 'The specified <b>Install Directory</b> must be non-existent or empty.<br><br>';
+                $msg .= 'several minutes to complete install!</span> The specified <b>Install Directory</b> must be non-existent or empty.<br><br>';
                 
                 // Enforce username and password, remove PHP version
                 $msg .= '
