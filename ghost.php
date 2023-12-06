@@ -43,18 +43,10 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Create nodeapp folder and 'Absolute' copy over ghost files
             $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " ; ";
+            $cmd .= "chmod 751 " . escapeshellarg( $nodeapp_folder ) . " && ";
             $cmd .= __DIR__ . '/abcopy "/opt/ghost/" "' . $ghost_folder . '" && ';
-            $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder ) . " ; ";
+            $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder );
 
-            // // Create the nodeapp folder 
-            
-            // $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder ) . " ; ";
-            // $cmd .= 'runuser -l ' . $user . ' -c "cd ' . escapeshellarg( $ghost_folder ) . ' && ';
-            // $cmd .= 'export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ';
-            // $cmd .= 'ghost install --url https://' . $domain . ' --db mysql --dbhost 127.0.0.1 --dbuser ';
-            // $cmd .= $dbUser . ' --dbpass ' . $dbPassword;
-            // $cmd .= ' --port 3306 --dbname ' . $dbName . ' --mail Sendmail';
-            // $cmd .= ' --process local --dir ' . $ghost_folder . ' --no-prompt --no-setup-nginx"';
             $hcpp->log( $cmd );
             $hcpp->log( shell_exec( $cmd ) );
 
