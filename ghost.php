@@ -43,7 +43,6 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Create nodeapp folder and 'Absolute' copy over ghost files
             $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " ; ";
-            $cmd .= "chmod 751 " . escapeshellarg( $nodeapp_folder ) . " && ";
             $cmd .= __DIR__ . '/abcopy "/opt/ghost/" "' . $ghost_folder . '" && ';
             $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder );
 
@@ -52,6 +51,7 @@ if ( ! class_exists( 'Ghost') ) {
 
             // Copy over ghost config files
             $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
+            chmod( $nodeapp_folder, 0751 );
 
             // Cleanup, allocate ports, prepare nginx and prepare to start services
             $hcpp->nodeapp->shutdown_apps( $nodeapp_folder );
