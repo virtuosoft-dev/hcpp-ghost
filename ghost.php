@@ -165,6 +165,7 @@ if ( ! class_exists( 'Ghost') ) {
             $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "sleep 8 && touch ' . $ghost_folder . '/.restart/restart"';
             $hcpp->log( $cmd );
             shell_exec( $cmd );
+            return $args;
         }
 
         // Customize the install page
