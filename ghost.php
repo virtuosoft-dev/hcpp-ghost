@@ -3,280 +3,184 @@
  * Extend the HestiaCP Pluginable object with our Ghost object for
  * allocating Ghost instances.
  * 
- * @version 1.0.0
- * @license GPL-3.0
+ * @author Virtuosoft/Stephen J. Carnam
+ * @license AGPL-3.0, for other licensing options contact support@virtuosoft.com
  * @link https://github.com/virtuosoft-dev/hcpp-ghost
  * 
  */
 
 if ( ! class_exists( 'Ghost') ) {
-    class Ghost {
+    class Ghost extends HCPP_Hooks {
+        public $supported = ['20'];
+        public $updating = false;
+
         /**
-         * Constructor, listen for the invoke, POST, and render events
-         */
-        public function __construct() {
+         * Customize Ghost install screen
+         */ 
+        public function hcpp_add_webapp_xpath( $xpath ) {
+            if ( ! (isset( $_GET['app'] ) && $_GET['app'] == 'Ghost' ) ) return $xpath;
             global $hcpp;
-            $hcpp->ghost = $this;
-            $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'setup' ] );
-            $hcpp->add_action( 'hcpp_render_body', [ $this, 'hcpp_render_body' ] );
+
+            // Check for bash shell user
+            $user = $_SESSION["user"];
+            if ($_SESSION["look"] != "") {
+                $user = $_SESSION["look"];
+            }
+            $domain = $_GET['domain'];
+            $domain = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $domain);
+            $shell = $hcpp->run( "v-list-user $user json")[$user]['SHELL'];
+            if ( $shell != 'bash' ) {
+                $style = '<style>div.u-mb10{display:none;}</style>';
+                $html = '<span class="u-mb10">Cannot continue. User "' . $user . '" must have bash login ability.</span>';
+            }else{
+                $style = '<style>#webapp_php_version, label[for="webapp_php_version"]{display:none;}</style>';
+                $html =  '<div class="u-mb10">
+                              The Ghost instance lives inside the "nodeapp" folder (next to "public_html"). It can be a
+                              standalone instance in the domain root, or in a subfolder using the <b>Install Directory</b> 
+                              field above.
+                          </div>';
+            }
+            $xpath = $hcpp->insert_html( $xpath, '//div[contains(@class, "form-container")]', $html );
+            $xpath = $hcpp->insert_html( $xpath, '/html/head', $style );
+
+            // Remove existing public_html related alert if present
+            $alert_div = $xpath->query('//div[@role="alert"][1]');
+            if ( $alert_div->length > 0 ) {
+                $alert_div = $alert_div[0];
+                $alert_div->parentNode->removeChild( $alert_div );
+            }
+
+            // Insert our own alert about non-empty nodeapp folder
+            $folder = "/home/$user/web/$domain/nodeapp";
+            if ( file_exists( $folder ) && iterator_count(new \FilesystemIterator( $folder, \FilesystemIterator::SKIP_DOTS)) > 0 ) {
+                $html = '<div class="alert alert-info u-mb10" role="alert">
+                        <i class="fas fa-info"></i>
+                        <div>
+                            <p class="u-mb10">Data Loss Warning!</p>
+                            <p class="u-mb10">Your nodeapp folder already has files uploaded to it. The installer will overwrite your files and/or the installation might fail.</p>
+                            <p>Please make sure ~/web/' . $domain . '/nodeapp is empty or an empty subdirectory is specified!</p>
+                        </div>
+                    </div>';
+                $xpath = $hcpp->insert_html( $xpath, '//div[contains(@class, "form-container")]', $html, true );
+            }else{
+                $above = '<div class="alert alert-info u-mb10" role="alert">
+                            <i class="fas fa-info"></i>
+                            <div>
+                                <p class="u-mb10">Important</p>
+                                <p class="u-mb10">Be sure to visit your website\'s /ghost/ subfolder to setup the administrator account.</p>
+                            </div>
+                          </div>';
+                $xpath = $hcpp->insert_html( $xpath, '//div[contains(@class, "form-container")]', $above, true );
+            }
+            return $xpath;
         }
 
-        // Setup Ghost with the given user options
-        public function setup( $args ) {
-            if ( $args[0] != 'ghost_install' ) return $args;
+        /**
+         * Install, uninstall, or setup Ghost with the given options
+         * This can be invoked from the command line v-invoke-plugin and
+         * is used by the webapp installer.
+         */
+        public function hcpp_invoke_plugin( $args ) {
+            if ( count( $args ) < 0 ) return $args;
             global $hcpp;
-            $options = json_decode( $args[1], true );
-            $user = $options['user'];
-            $domain = $options['domain'];
 
-            // Database connection details
-            $dbUser = $user . '_' . $options['database_user'];
-            $dbPassword = $options['database_password'];
-            $dbName = $user . '_' . $options['database_name'];
+            // Setup Ghost with the supported NodeJS on the given domain 
+            if ( $args[0] == 'ghost_setup' ) {
+                $options = json_decode( $args[1], true );
+                $hcpp->log( $options );
+                $user = $options['user'];
+                $domain = $options['domain'];
+                $email = $options['ghost_email'];
+                $nodejs_version = $this->supported[0];
+                $ghost_folder = $options['ghost_folder'];
+                if ( $ghost_folder == '' || $ghost_folder[0] != '/' ) $ghost_folder = '/' . $ghost_folder;
+                $nodeapp_folder = "/home/$user/web/$domain/nodeapp";
 
-            // Get the folder details (absolute nodeapp and ghost folder, and relative subfolder)
-            $ghost_folder = $options['ghost_folder'];
-            if ( $ghost_folder == '' || $ghost_folder[0] != '/' ) $ghost_folder = '/' . $ghost_folder;
-            $nodeapp_folder = "/home/$user/web/$domain/nodeapp";
-            $subfolder = $ghost_folder;
-            $ghost_folder = $nodeapp_folder . $ghost_folder;
+                // Database connection details
+                $dbUser = $user . '_' . $options['database_user'];
+                $dbPassword = $options['database_password'];
+                $dbName = $user . '_' . $options['database_name'];
+                
+                // Create parent nodeapp folder first this way to avoid CLI permissions issues
+                mkdir( $nodeapp_folder, 0755, true );
+                chown( $nodeapp_folder, $user );
+                chgrp( $nodeapp_folder, $user );
+                $ghost_folder = $nodeapp_folder . $ghost_folder;
+                $ghost_root = $hcpp->delLeftMost( $ghost_folder, $nodeapp_folder ); 
+                $hcpp->runuser( $user, "mkdir -p $ghost_folder" );
 
-            // Create nodeapp folder and 'Absolute' copy over ghost files
-            $cmd = "mkdir -p " . escapeshellarg( $ghost_folder ) . " ; ";
-            $cmd .= __DIR__ . '/abcopy "/opt/ghost/" "' . $ghost_folder . '" && ';
-            $cmd .= "chown -R $user:$user " . escapeshellarg( $nodeapp_folder );
+                // Copy over nodeapp files
+                $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
+                chmod( $nodeapp_folder, 0755 );
 
-            $hcpp->log( $cmd );
-            $hcpp->log( shell_exec( $cmd ) );
+                // Create symbolic links
+                $hcpp->runuser( $user, "ln -s /opt/ghost/current $nodeapp_folder/current" );
+                $hcpp->runuser( $user, "ln -s /opt/ghost/content/themes/casper $nodeapp_folder/content/themes/casper" );
+                $hcpp->runuser( $user, "ln -s /opt/ghost/content/themes/source $nodeapp_folder/content/themes/source" );
 
-            // Copy over ghost config files
-            $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
-            chmod( $nodeapp_folder, 0751 );
+                // Update the .nvmrc file
+                file_put_contents( $ghost_folder . '/.nvmrc', "v$nodejs_version" );
 
-            // Cleanup, allocate ports, prepare nginx and prepare to start services
-            $hcpp->nodeapp->shutdown_apps( $nodeapp_folder );
-            $hcpp->nodeapp->allocate_ports( $nodeapp_folder );
-            $port = file_get_contents( "/usr/local/hestia/data/hcpp/ports/$user/$domain.ports" );
-            $port = $hcpp->delLeftMost( $port, '$ghost_port ' );
-            $port = $hcpp->getLeftMost( $port, ';' );
-
-            // Fill out config.development.json and config.production.json
-            $config = file_get_contents( $ghost_folder . '/config.development.json' );
-            $config = str_replace( '%database_name%', $dbName, $config );
-            $config = str_replace( '%database_user%', $dbUser, $config );
-            $config = str_replace( '%database_password%', $dbPassword, $config );
-            $config = str_replace( '%ghost_port%', $port, $config );
-            $url = "http://$domain" . $subfolder;
-            if ( is_dir( "/home/$user/conf/web/$domain/ssl") ) {
-                $url = "https://$domain" . $subfolder;
-            }
-            $config = str_replace( '%ghost_url%', $url, $config );
-            $config = str_replace( '%ghost_content%', rtrim($ghost_folder, '/') . '/content', $config );
-
-            file_put_contents( $ghost_folder . '/config.development.json', $config );
-            file_put_contents( $ghost_folder . '/config.production.json', $config );
-
-            // Update proxy and restart nginx
-            if ( $nodeapp_folder . '/' == $ghost_folder ) {
-                $hcpp->run( "change-web-domain-proxy-tpl $user $domain NodeApp" );
-            }else{
-                $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
-                $hcpp->nodeapp->startup_apps( $nodeapp_folder );
-                $hcpp->run( "restart-proxy" );
-            }
-
-            // Check if default title and name are set in the Ghost database
-            sleep(5);
-            $dbUpdateRetries = 10;
-            while ( $dbUpdateRetries-- > 0 ) {
-                try {
-                    // Initialize a PDO connection
-                    $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                    // Check for the presence of 'title' in the 'settings' table
-                    $stmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'title'");
-                    $stmt->execute();
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($result && isset($result['value']) && !empty($result['value'])) {
-                        
-                        // Check the presence of 'name' in the 'users' table
-                        $stmt = $pdo->prepare("SELECT name FROM users WHERE `id` = 1");
-                        $stmt->execute();
-                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                        if ($result && isset($result['name']) && !empty($result['name'])) {
-                            $dbUpdateRetries = 0;
-                        } else {
-                            $hcpp->log("Ghost database not ready yet; no name found. Retrying in 5 seconds.");
-                            sleep(5);
-                        }
-                    } else {
-                        $hcpp->log("Ghost database not ready yet; no title found. Retrying in 5 seconds.");
-                        sleep(5);
-                    }
-                } catch (PDOException $e) {
-
-                    // Handle database errors
-                    $hcpp->log( "Ghost database not ready yet; error: " . $e->getMessage() );
-                    sleep(5);
+                // Cleanup, allocate ports, prepare nginx and start services
+                $hcpp->nodeapp->shutdown_apps( $nodeapp_folder );
+                $hcpp->nodeapp->allocate_ports( $nodeapp_folder );
+                $port = file_get_contents( "/usr/local/hestia/data/hcpp/ports/$user/$domain.ports" );
+                $port = $hcpp->delLeftMost( $port, '$ghost_port ' );
+                $port = $hcpp->getLeftMost( $port, ';' );
+    
+                // Fill out config.development.json and config.production.json
+                $config = file_get_contents( $ghost_folder . '/config.production.json' );
+                $config = str_replace( '%database_name%', $dbName, $config );
+                $config = str_replace( '%database_user%', $dbUser, $config );
+                $config = str_replace( '%database_password%', $dbPassword, $config );
+                $config = str_replace( '%ghost_port%', $port, $config );
+                $config = str_replace( '%ghost_email%', $email, $config );
+                $url = "http://$domain" . $subfolder;
+                if ( is_dir( "/home/$user/conf/web/$domain/ssl") ) {
+                    $url = "https://$domain" . $subfolder;
                 }
-            }
-            sleep(5);
+                $config = str_replace( '%ghost_url%', $url, $config );
+                $config = str_replace( '%ghost_content%', rtrim($ghost_folder, '/') . '/content', $config );
+                file_put_contents( $ghost_folder . '/config.production.json', $config );
+                file_put_contents( $ghost_folder . '/config.development.json', $config );
 
-            // Update the Ghost database with our title, name, email, and password.
-            try {
-                // Initialize a PDO connection
-                $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $dbUser, $dbPassword);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                // Calculate the slug and hash the password
-                $hash = password_hash( $options['ghost_password'], PASSWORD_BCRYPT, ['cost' => 10] );
-                $slug = $slug = strtolower( $options['ghost_fullname'] ); 
-                $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
-                $slug = trim( $slug, '-' );
-                $slug = preg_replace( '/-+/', '-', $slug );
-                                
-                // SQL statements with placeholders
-                $updateSettingsSQL = "UPDATE `settings` SET `value` = :title WHERE `key` = 'title';";
-                $updateUsersSQL = "UPDATE `users` SET `name` = :name, `slug` = :slug, `email` = :email, `password` = :password, `status` = 'active' WHERE `id` = 1;";
-            
-                // Prepare and execute the first SQL statement
-                $stmtSettings = $pdo->prepare($updateSettingsSQL);
-                $stmtSettings->bindParam(':title', $options['ghost_title']);
-                $stmtSettings->execute();
-            
-                // Prepare and execute the second SQL statement
-                $stmtUsers = $pdo->prepare($updateUsersSQL);
-                $stmtUsers->bindParam(':name', $options['ghost_fullname']);
-                $stmtUsers->bindParam(':slug', $slug);
-                $stmtUsers->bindParam(':email', $options['ghost_email']);
-                $stmtUsers->bindParam(':password', $hash);
-                $stmtUsers->execute();
-            
-                // Log the result or handle errors
-                $hcpp->log( "Ghost database updated correctly." );
-                $dbUpdateRetries = 0;
-            } catch (PDOException $e) {    
-                // Handle database errors
-                $hcpp->log("Error: " . $e->getMessage());
+                // Update proxy and restart nginx
+                if ( $nodeapp_folder . '/' == $ghost_folder ) {
+                    $ext = $hcpp->run( "v-list-web-domain '$user' '$domain' json" )[$domain]['PROXY_EXT'];
+                    $ext = str_replace( ' ', ',', $ext );
+                    $hcpp->run( "v-change-web-domain-proxy-tpl '$user' '$domain' 'NodeApp' '$ext' 'no'" );
+                }else{
+                    $hcpp->nodeapp->generate_nginx_files( $nodeapp_folder );
+                    $hcpp->nodeapp->startup_apps( $nodeapp_folder );
+                }
+                $hcpp->run( "v-restart-proxy" );
             }
-            
-            // Restart the ghost service to reflect DB changes
-            $cmd = 'runuser -s /bin/bash -l ' . $user . ' -c "sleep 8 && touch ' . $ghost_folder . '/.restart/restart"';
-            $hcpp->log( $cmd );
-            shell_exec( $cmd );
+
             return $args;
         }
 
-        // Customize the install page
-        public function hcpp_render_body( $args ) {
+        /**
+         * Check daily for Ghost updates and install them.
+         */
+        public function v_update_sys_queue( $args ) {
             global $hcpp;
+            if ( ! (isset( $args[0] ) && trim( $args[0] ) == 'daily') ) return $args;
+            if ( strpos( $hcpp->run('v-list-sys-hestia-autoupdate'), 'Enabled') == false ) return $args;
+            
+            // Get current ghost version
+            $cmd = 'su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v20 && ghost check-update"';
+            $result = shell_exec( $cmd );
+            $current = trim( $hcpp->getLeftMost( $hcpp->delLeftMost( $result, 'Current version: ' ), "\n" ) );
+            $latest = trim( $hcpp->getLeftMost( $hcpp->delLeftMost( $result, 'Latest version: '), "\n" ) );
+            if ( $current == $latest ) return $args;
 
-            // Fill out version on app listing page
-            if ( $args['page'] == 'list_webapps' ) {
-                $version = shell_exec( 'basename $(readlink /opt/ghost/current)' );
-                $args['content'] = str_replace( '%ghost_version%', $version, $args['content'] );
-                return $args;
-            }
-
-            // Customize the Ghost install page
-            if ( $args['page'] !== 'setup_webapp') return $args;
-            if ( strpos( $_SERVER['REQUEST_URI'], '?app=Ghost' ) === false ) return $args;
-            $content = $args['content'];
-            $user = trim($args['user'], "'");
-            $shell = $hcpp->run( "list-user $user json")[$user]['SHELL'];
-
-            // Suppress Data loss alert, and PHP version selector
-            $content = '<style>#vstobjects > div > div.u-mt20 > div:nth-child(6),.alert.alert-info{display:none;}</style>' . $content;
-            if ( $shell != 'bash' ) {
-
-                // Display bash requirement
-                $content = '<style>.form-group{display:none;}</style>' . $content;
-                $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Cannot contiue. User "' . $user . '" must have bash login ability.</span>';
-                $msg .= '<script>$(function(){$(".l-unit-toolbar__buttonstrip.float-right a").css("display", "none");});</script>';
-            }elseif ( !is_dir('/usr/local/hestia/plugins/nodeapp') ) {
-        
-                // Display missing nodeapp requirement
-                $content = '<style>.form-group{display:none;}</style>' . $content;
-                $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Cannot contiue. The Ghost Quick Installer requires the NodeApp plugin.</span>';
-                $msg .= '<script>$(function(){$(".l-unit-toolbar__buttonstrip.float-right a").css("display", "none");});</script>';
-            }else{
-        
-                // Display install information
-                $msg = '<div style="margin-top:-20px;width:75%;"><span>';
-                $msg .= 'Please be patient; Ghost download &amp; installation may take <span style="font-weight:bold;font-style:italic;color:darkorange;">';
-                $msg .= 'several minutes to complete install!</span> The specified <b>Install Directory</b> must be non-existent or empty.<br><br>';
-                
-                // Enforce username and password, remove PHP version
-                $msg .= '
-                <script>
-                    document.addEventListener("DOMContentLoaded", function() { 
-                        $("label[for=webapp_php_version]").parent().css("display", "none");
-                        let borderColor = $("#webapp_ghost_fullname").css("border-color");
-                        let toolbar = $(".l-center.edit").html();
-                        function nr_validate() {
-                            if ( $("#webapp_ghost_fullname").val().trim() == "" || $("#webapp_ghost_password").val().trim() == "" || $("#webapp_ghost_email").val().trim() == "" ) {
-                                $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "0.5").css("cursor", "not-allowed");
-                                if ($("#webapp_ghost_fullname").val().trim() == "") {
-                                    $("#webapp_ghost_fullname").css("border-color", "red");
-                                }else{
-                                    $("#webapp_ghost_fullname").css("border-color", borderColor);
-                                }
-                                if ($("#webapp_ghost_password").val().trim().length < 10) {
-                                    $("#webapp_ghost_password").css("border-color", "red");
-                                }else{
-                                    $("#webapp_ghost_password").css("border-color", borderColor);
-                                }
-                                if ($("#webapp_ghost_email").val().trim() == "") {
-                                    $("#webapp_ghost_email").css("border-color", "red");
-                                }else{
-                                    $("#webapp_ghost_email").css("border-color", borderColor);
-                                }
-                                return false;
-                            }else{
-                                $(".l-unit-toolbar__buttonstrip.float-right a").css("opacity", "1").css("cursor", "");
-                                $("#webapp_ghost_fullname").css("border-color", borderColor);
-                                $("#webapp_ghost_password").css("border-color", borderColor);
-                                $("#webapp_ghost_email").css("border-color", borderColor);
-                                return true;
-                            }
-                        };
-        
-                        // Override the form submition
-                        $(".l-unit-toolbar__buttonstrip.float-right a").removeAttr("data-action").removeAttr("data-id").click(function() {
-                            if ( nr_validate() ) {
-                                $(".l-sort.clearfix").html("<div class=\"l-unit-toolbar__buttonstrip\"></div><div class=\"l-unit-toolbar__buttonstrip float-right\"><div><div class=\"timer-container\" style=\"float:right;\"><div class=\"timer-button spinner\"><div class=\"spinner-inner\"></div><div class=\"spinner-mask\"></div> <div class=\"spinner-mask-two\"></div></div></div></div></div>");
-                                $("#vstobjects").submit();
-                            }
-                        });
-                        $("#vstobjects").submit(function(e) {
-                            if ( !nr_validate() ) {
-                                e.preventDefault();
-                            }
-                        });
-                        $("#webapp_ghost_fullname").blur(nr_validate).keyup(nr_validate);
-                        $("#webapp_ghost_password").blur(nr_validate).keyup(nr_validate);
-                        $("#webapp_ghost_email").blur(nr_validate).keyup(nr_validate);
-                        $(".generate").click(function() {
-                            setTimeout(function() {
-                                nr_validate();
-                            }, 500)
-                        });
-                        nr_validate();
-                    });
-                </script>
-                ';
-            }
-            if ( strpos( '<div class="app-form">', $content ) !== false ) {
-                $content = str_replace( '<div class="app-form">', '<div class="app-form">' . $msg, $content ); // Hestia 1.6.X
-            }else{
-                $content = str_replace( '<h1 ', $msg . '<h1 style="padding-bottom:0;" ', $content ); // Hestia 1.7.X
-            }
-            $args['content'] = $content;
+            // Update Ghost
+            $hcpp->nodeapp->do_maintenance( function( $pm2_list ) use ( $hcpp ) {
+                $hcpp->log( 'ghost do_maintenance' );
+            }, ['20'], ['ghost'] );
             return $args;
         }
     }
-    new Ghost();
+    global $hcpp;
+    $hcpp->register_plugin( Ghost::class );
 }

@@ -1,8 +1,6 @@
 # hcpp-ghost
 A plugin for Hestia Control Panel (via hestiacp-pluginable) that enables hosting a Ghost instance. With this plugin installed, a new Quick Installer option will appear. User accounts can host their own Ghost instance either in the root domain or as a subfolder installation. For instance, it is possible to run Ghost in the root domain while having NodeBB installed on the same domain in a subfolder (i.e. https://example.com/nodebb-forum) or vice versa.
 
-&nbsp;
-> :warning: !!! This plugin is NOT supported and this repo is scheduled for archiving; as the [Ghost project has stopped support for MariaDB](https://forum.ghost.org/t/is-the-latest-version-cant-be-installed-with-mariadb-anymore/34241). Compatibility, stability, and functionality is therefore unknown. This may change if an `"hcpp-mysql8"` project becomes a reality but until then there are no plans for continued development.
 
 ## Installation
 HCPP-Ghost requires an Ubuntu based installation of [Hestia Control Panel](https://hestiacp.com) in addition to an installation of [HestiaCP-Pluginable](https://github.com/virtuosoft-dev/hestiacp-pluginable) *and* [HCPP-NodeApp](https://github.com/virtuosoft-dev/hcpp-nodeapp) to function; please ensure that you have first installed both Pluginable and NodeApp on your Hestia Control Panel before proceeding. Switch to a root user and simply clone this project to the `/usr/local/hestia/plugins` folder. It should appear as a subfolder with the name `ghost`, i.e. `/usr/local/hestia/plugins/ghost`.

@@ -14,7 +14,8 @@
       }
     },
     "mail": {
-      "transport": "Sendmail"
+      "transport": "Sendmail",
+      "from": "%ghost_email%"
     },
     "logging": {
       "transports": [

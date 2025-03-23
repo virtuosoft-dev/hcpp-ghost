@@ -7,21 +7,30 @@ export DEBIAN_FRONTEND=noninteractive
 
 dir=$PWD
 export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh
-nvm use v18
+nvm use v20
+
+# Create the 'ghost' user if it doesn't already exist
+if ! id -u ghost > /dev/null 2>&1; then
+    useradd --system --create-home --shell /usr/sbin/nologin ghost
+fi
+
+# Install Ghost CLI globally if not already installed
 if [[ ! $(which ghost) ]]; then
     npm install ghost-cli@latest -g
 fi
-if [ ! -d "/opt/ghost/versions" ]; then
 
+# Set up the Ghost installation directory
+if [ ! -d "/opt/ghost/versions" ]; then
     mkdir -p /opt/ghost
-    if [ -d "/home/debian" ]; then
-        chown debian:debian /opt/ghost
-        runuser -l debian -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ghost install --dir /opt/ghost --no-prompt"
-    fi
-    if [ -d "/home/ubuntu" ]; then
-        chown ubuntu:ubuntu /opt/ghost
-        runuser -l ubuntu -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v18 && ghost install --dir /opt/ghost --no-prompt"
-    fi
+    chown -R ghost:ghost /opt/ghost
+    chmod -R 755 /opt/ghost  # Ensure directories are readable and executable by others
+
+    # Run the Ghost installation as the 'ghost' user
+    su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v20 && ghost install --dir /opt/ghost --no-prompt --no-setup --no-start --no-enable --no-checkmem --auto"
+
+    # Set permissions to make files readable but not writable by others
+    find /opt/ghost -type d -exec chmod 755 {} \;  # Directories: rwx for owner, rx for group/others
+    find /opt/ghost -type f -exec chmod 644 {} \;  # Files: rw for owner, r for group/others
 fi
 
 # Copy over our Quick Install App

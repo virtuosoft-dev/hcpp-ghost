@@ -3,8 +3,27 @@
 ############################################
 # Uninstall Ghost
 ############################################
+
 export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh
-nvm use v18
-if [[ ! $(which ghost) ]]; then
+nvm use 20
+
+# Uninstall Ghost CLI globally if installed
+if [[ $(which ghost) ]]; then
     npm uninstall ghost-cli@latest -g
 fi
+
+# Remove the Ghost installation directory
+if [ -d "/opt/ghost" ]; then
+    echo "Removing /opt/ghost directory..."
+    rm -rf /opt/ghost
+    echo "/opt/ghost directory removed."
+fi
+
+# Remove the 'ghost' user if it exists
+if id -u ghost > /dev/null 2>&1; then
+    echo "Removing ghost user..."
+    userdel -r ghost
+    echo "ghost user removed."
+fi
+
+echo "Ghost has been successfully uninstalled."
