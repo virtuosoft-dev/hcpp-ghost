@@ -162,23 +162,26 @@ if ( ! class_exists( 'Ghost') ) {
         /**
          * Check daily for Ghost updates and install them.
          */
-        public function v_update_sys_queue( $args ) {
-            global $hcpp;
-            if ( ! (isset( $args[0] ) && trim( $args[0] ) == 'daily') ) return $args;
-            if ( strpos( $hcpp->run('v-list-sys-hestia-autoupdate'), 'Enabled') == false ) return $args;
+        public function nodeapp_autoupdate() {
             
             // Get current ghost version
-            $cmd = 'su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v20 && ghost check-update"';
+            global $hcpp;
+            $cmd = 'su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use ';
+            $cmd .= $this->supported[0] . ' && cd /opt/ghost && ghost check-update"';
             $result = shell_exec( $cmd );
             $current = trim( $hcpp->getLeftMost( $hcpp->delLeftMost( $result, 'Current version: ' ), "\n" ) );
             $latest = trim( $hcpp->getLeftMost( $hcpp->delLeftMost( $result, 'Latest version: '), "\n" ) );
-            if ( $current == $latest ) return $args;
+            $hcpp->log( 'Ghost on v' . $this->supported[0] . ': ' . $current . ' vs ' . $latest );
+            if ( $current == $latest ) return;
 
             // Update Ghost
             $hcpp->nodeapp->do_maintenance( function( $pm2_list ) use ( $hcpp ) {
-                $hcpp->log( 'ghost do_maintenance' );
+                $cmd = 'su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use ';
+                $cmd .= $this->supported[0] . ' && cd /opt/ghost && ghost install --dir /opt/ghost --no-prompt ';
+                $cmd .= '--no-setup --no-restart --no-enable --no-checkmem --auto"';
+                $hcpp->log( $cmd );
+                $hcpp->log( shell_exec( $cmd ) );
             }, ['20'], ['ghost'] );
-            return $args;
         }
     }
     global $hcpp;
