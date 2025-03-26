@@ -28,9 +28,12 @@ if [ ! -d "/opt/ghost/versions" ]; then
     # Run the Ghost installation as the 'ghost' user
     su -s /bin/bash ghost -c "export NVM_DIR=/opt/nvm && source /opt/nvm/nvm.sh && nvm use v20 && ghost install --dir /opt/ghost --no-prompt --no-setup --no-start --no-enable --no-checkmem --auto"
 
-    # Set permissions to make files readable but not writable by others
-    find /opt/ghost -type d -exec chmod 755 {} \;  # Directories: rwx for owner, rx for group/others
-    find /opt/ghost -type f -exec chmod 644 {} \;  # Files: rw for owner, r for group/others
+    # Set permissions for files: rw for owner, r for group/others, preserve executable
+    find /opt/ghost -type f \( -perm -u=x -o -perm -g=x -o -perm -o=x \) -exec chmod u=rw,go=r,a+x {} \; \
+        -o -exec chmod u=rw,go=r {} \;
+
+    # Set permissions for directories: rwx for owner, rx for group/others
+    find /opt/ghost -type d -exec chmod 755 {} \;
 fi
 
 # Copy over our Quick Install App
