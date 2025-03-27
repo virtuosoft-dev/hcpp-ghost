@@ -109,8 +109,9 @@ if ( ! class_exists( 'Ghost') ) {
                 $ghost_root = $hcpp->delLeftMost( $ghost_folder, $nodeapp_folder ); 
                 $hcpp->runuser( $user, "mkdir -p $ghost_folder" );
 
-                // Copy over nodeapp files
+                // Copy over nodeapp files and content folders
                 $hcpp->copy_folder( __DIR__ . '/nodeapp', $ghost_folder, $user );
+                $hcpp->copy_folder( '/opt/ghost/content', $ghost_folder . '/content', $user );
                 chmod( $nodeapp_folder, 0755 );
 
                 // Create symbolic links
